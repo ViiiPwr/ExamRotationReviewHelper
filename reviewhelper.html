@@ -130,6 +130,8 @@
   <div class="section card">
     <h2>今天的日期</h2>
     <div id="todayInfo"></div>
+    <button onclick="skipToday()">Skip Today</button>
+    <button onclick="undoSkipToday()">撤销推迟</button>
   </div>
 
   <div class="section card">
@@ -399,6 +401,53 @@ END:VEVENT
   link.href = URL.createObjectURL(blob);
   link.download = 'review_schedule.ics';
   link.click();
+}
+
+// Skip Today 功能
+let previousSchedules = []; // 用于存储上次操作前的日程数据，方便恢复
+
+// 点击“Skip Today”按钮后，推迟所有今天及以后的日程
+function skipToday() {
+  if (allSchedules.length === 0) {
+    alert("暂无日程数据可操作");
+    return;
+  }
+
+  // 备份当前日程数据，用于恢复
+  previousSchedules = JSON.parse(JSON.stringify(allSchedules));
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);  // 确保不包含时间部分，只有日期
+
+  // 遍历所有日程，修改日期
+  allSchedules.forEach(item => {
+    const itemDate = new Date(item.date);
+
+    // 如果日程的日期是今天或更晚
+    if (itemDate >= today) {
+      // 将日期推迟一天
+      itemDate.setDate(itemDate.getDate() + 1);
+      item.date = itemDate.toISOString().split('T')[0];
+    }
+  });
+
+  saveData(); // 保存数据到本地
+  renderSchedule(); // 更新日程表
+  alert("所有今天及以后日程已推迟一天！");
+}
+
+// 如果需要恢复，点击撤销按钮
+function undoSkipToday() {
+  if (previousSchedules.length === 0) {
+    alert("没有可撤销的操作");
+    return;
+  }
+
+  // 恢复日程数据
+  allSchedules = previousSchedules;
+  saveData(); // 保存数据到本地
+  renderSchedule(); // 更新日程表
+  alert("操作已撤销，日程恢复到原状态");
 }
 
     window.onload = () => {
