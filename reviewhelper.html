@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
   <meta charset="UTF-8">
   <title>艾宾浩斯记忆曲线复习助手</title>
@@ -12,15 +13,18 @@
       padding: 0;
       color: #333;
     }
+
     header {
       background-color: #4CAF50;
       color: white;
       padding: 20px;
       text-align: center;
     }
+
     h1 {
       margin: 0;
     }
+
     .section {
       background: white;
       border-radius: 8px;
@@ -28,62 +32,81 @@
       padding: 20px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
+
     label {
       margin-right: 10px;
       font-size: 16px;
     }
-    input, button {
+
+    input,
+    button {
       padding: 10px;
       margin-top: 5px;
       border-radius: 4px;
       border: 1px solid #ccc;
     }
-    input[type="text"], input[type="date"], input[type="month"] {
+
+    input[type="text"],
+    input[type="date"],
+    input[type="month"] {
       width: 200px;
     }
+
     button {
       background-color: #4CAF50;
       color: white;
       cursor: pointer;
       border: none;
     }
+
     button:hover {
       background-color: #45a049;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
-    th, td {
+
+    th,
+    td {
       padding: 12px;
       text-align: center;
       border: 1px solid #ddd;
       border-radius: 6px;
     }
+
     th {
       background-color: #4CAF50;
       color: white;
     }
+
     tr:hover {
       background-color: #f2f2f2;
     }
+
     .completed {
       background-color: #d0f0c0;
       text-decoration: line-through;
     }
+
     .completed input[type="checkbox"] {
       background-color: #d0f0c0;
     }
-    #countdown, #todayInfo {
+
+    #countdown,
+    #todayInfo {
       margin-bottom: 20px;
       font-size: 18px;
       font-weight: 600;
     }
+
     #stats {
       font-weight: bold;
       margin-top: 20px;
     }
+
     .card {
       background-color: #fff;
       border-radius: 8px;
@@ -91,14 +114,17 @@
       padding: 20px;
       margin: 10px 0;
     }
+
     .card h2 {
       margin-top: 0;
     }
+
     /* 进度条外框 */
     .progress-bar {
       width: 100%;
       height: 20px;
-      background-color: #e0e0e0; /* 灰色背景 */
+      background-color: #e0e0e0;
+      /* 灰色背景 */
       border-radius: 10px;
       margin-top: 10px;
     }
@@ -106,15 +132,19 @@
     /* 进度条的实际填充部分 */
     .progress {
       height: 100%;
-      background: linear-gradient(90deg, #4caf50, #8bc34a); /* 绿色渐变 */
+      background: linear-gradient(90deg, #4caf50, #8bc34a);
+      /* 绿色渐变 */
       border-radius: 10px;
     }
+
     .highlight {
-    background-color: #fff9c4; /* 黄色背景色 */
-    font-weight: bold;
+      background-color: #fff9c4;
+      /* 黄色背景色 */
+      font-weight: bold;
     }
   </style>
 </head>
+
 <body>
 
   <header>
@@ -158,7 +188,7 @@
     <label>
       导入数据：<input type="file" onchange="uploadData(event)">
     </label> <br>
-  <button onclick="exportToICS()">导出所有日程为日历文件 (.ics)</button>
+    <button onclick="exportToICS()">导出所有日程为日历文件 (.ics)</button>
   </div>
 
   <script>
@@ -206,65 +236,65 @@
 
     function renderSchedule() {
       const viewMonth = document.getElementById("viewMonth").value;
-  if (!viewMonth) return;
+      if (!viewMonth) return;
 
-  const [year, month] = viewMonth.split("-");
-  const lastDay = new Date(year, month, 0).getDate();
+      const [year, month] = viewMonth.split("-");
+      const lastDay = new Date(year, month, 0).getDate();
 
-  let calendar = {};
-  allSchedules.forEach((item, idx) => {
-    if (item.date.startsWith(viewMonth)) {
-      if (!calendar[item.date]) calendar[item.date] = [];
-      calendar[item.date].push({ ...item, index: idx });
-    }
-  });
+      let calendar = {};
+      allSchedules.forEach((item, idx) => {
+        if (item.date.startsWith(viewMonth)) {
+          if (!calendar[item.date]) calendar[item.date] = [];
+          calendar[item.date].push({ ...item, index: idx });
+        }
+      });
 
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];  // 获取当前日期（yyyy-mm-dd）
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];  // 获取当前日期（yyyy-mm-dd）
 
-  let html = `<table><tr><th>日期</th><th>复习内容</th></tr>`;
-  for (let day = 1; day <= lastDay; day++) {
-    const dateStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
-    const items = calendar[dateStr] || [];
-    const content = items.map(item => {
-  // 判断是否为第一次复习
-  const titleStyle = item.round === 1 ? 'style="color: #4CAF50;"' : '';
-  return `<div class="${item.completed ? 'completed' : ''}">
+      let html = `<table><tr><th>日期</th><th>复习内容</th></tr>`;
+      for (let day = 1; day <= lastDay; day++) {
+        const dateStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
+        const items = calendar[dateStr] || [];
+        const content = items.map(item => {
+          // 判断是否为第一次复习
+          const titleStyle = item.round === 1 ? 'style="color: #4CAF50;"' : '';
+          return `<div class="${item.completed ? 'completed' : ''}">
             <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
             <span ${titleStyle}>${item.name}（第${item.round}次）</span>
           </div>`;
-}).join("");
-    
-    // 如果是今天的日期，添加高亮样式
-    const rowClass = dateStr === todayStr ? 'highlight' : '';
+        }).join("");
 
-    html += `<tr class="${rowClass}"><td>${dateStr}</td><td>${content}</td></tr>`;
-  }
-  html += `</table>`;
-  document.getElementById("calendar").innerHTML = html;
+        // 如果是今天的日期，添加高亮样式
+        const rowClass = dateStr === todayStr ? 'highlight' : '';
+
+        html += `<tr class="${rowClass}"><td>${dateStr}</td><td>${content}</td></tr>`;
+      }
+      html += `</table>`;
+      document.getElementById("calendar").innerHTML = html;
 
       const totalTasks = allSchedules.length;
       const completedTasks = allSchedules.filter(item => item.completed).length;
       const uncompletedTasks = totalTasks - completedTasks;
 
-// 获取最晚的一次复习日程
-const latestSchedule = allSchedules.reduce((latest, item) => {
-  const itemDate = new Date(item.date);
-  return itemDate > latest ? itemDate : latest;
-}, new Date(0));  // 初始化为1970年1月1日
+      // 获取最晚的一次复习日程
+      const latestSchedule = allSchedules.reduce((latest, item) => {
+        const itemDate = new Date(item.date);
+        return itemDate > latest ? itemDate : latest;
+      }, new Date(0));  // 初始化为1970年1月1日
 
-// 获取最早的一次复习日程
-const earliestSchedule = allSchedules.reduce((earliest, item) => {
-  const itemDate = new Date(item.date);
-  return itemDate < earliest ? itemDate : earliest;
-}, new Date());  // 初始化为当前日期
+      // 获取最早的一次复习日程
+      const earliestSchedule = allSchedules.reduce((earliest, item) => {
+        const itemDate = new Date(item.date);
+        return itemDate < earliest ? itemDate : earliest;
+      }, new Date());  // 初始化为当前日期
 
-// 格式化最晚和最早的日期
-const latestScheduleDate = latestSchedule.toISOString().split('T')[0];
-const earliestScheduleDate = earliestSchedule.toISOString().split('T')[0];
+      // 格式化最晚和最早的日期
+      const latestScheduleDate = latestSchedule.toISOString().split('T')[0];
+      const earliestScheduleDate = earliestSchedule.toISOString().split('T')[0];
 
-// 计算完成所有复习所需的时间
-const timeDifference = Math.floor((latestSchedule - earliestSchedule) / (1000 * 60 * 60 * 24));  // 时间差（天数）
+      // 计算完成所有复习所需的时间
+      const timeDifference = Math.floor((latestSchedule - earliestSchedule) / (1000 * 60 * 60 * 24));  // 时间差（天数）
       const todayTasks = allSchedules.filter(item => item.date === todayStr && !item.completed).length;
 
       const completionRate = totalTasks ? ((completedTasks / totalTasks) * 100).toFixed(2) : 0;
@@ -307,7 +337,7 @@ const timeDifference = Math.floor((latestSchedule - earliestSchedule) / (1000 * 
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = function (e) {
         try {
           const importedData = JSON.parse(e.target.result);
           if (Array.isArray(importedData)) {
@@ -348,36 +378,36 @@ const timeDifference = Math.floor((latestSchedule - earliestSchedule) / (1000 * 
       document.getElementById("todayInfo").innerHTML = `今天是：${todayStr} ${weekDay}`;
     }
     function exportToICS() {
-  if (allSchedules.length === 0) {
-    alert("暂无日程数据可导出");
-    return;
-  }
+      if (allSchedules.length === 0) {
+        alert("暂无日程数据可导出");
+        return;
+      }
 
-  let icsContent = `BEGIN:VCALENDAR
+      let icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Ebbinghaus Review Helper//EN
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
 `;
 
-  // 用来记录已添加的事件UID
-  let existingUIDs = new Set();
+      // 用来记录已添加的事件UID
+      let existingUIDs = new Set();
 
-  allSchedules.forEach(item => {
-    const dateStr = item.date.replace(/-/g, '');
-    // 使用全天事件的格式
-    const start = `${dateStr}`;
-    const end = `${dateStr}`;
-    const uid = `${start}-${item.name}`; // 生成唯一的UID
+      allSchedules.forEach(item => {
+        const dateStr = item.date.replace(/-/g, '');
+        // 使用全天事件的格式
+        const start = `${dateStr}`;
+        const end = `${dateStr}`;
+        const uid = `${start}-${item.name}`; // 生成唯一的UID
 
-    // 如果UID已存在，跳过当前事件
-    if (existingUIDs.has(uid)) {
-      return;
-    }
+        // 如果UID已存在，跳过当前事件
+        if (existingUIDs.has(uid)) {
+          return;
+        }
 
-    existingUIDs.add(uid);  // 添加UID到已添加集合中
+        existingUIDs.add(uid);  // 添加UID到已添加集合中
 
-    icsContent += `BEGIN:VEVENT
+        icsContent += `BEGIN:VEVENT
 SUMMARY:${item.name}（第${item.round}次复习）
 DTSTART;TZID=Asia/Shanghai;VALUE=DATE:${start}
 DTEND;TZID=Asia/Shanghai;VALUE=DATE:${end}
@@ -392,63 +422,63 @@ DESCRIPTION:提醒你复习【${item.name}】
 END:VALARM
 END:VEVENT
 `;
-  });
+      });
 
-  icsContent += `END:VCALENDAR`;
+      icsContent += `END:VCALENDAR`;
 
-  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'review_schedule.ics';
-  link.click();
-}
-
-// Skip Today 功能
-let previousSchedules = []; // 用于存储上次操作前的日程数据，方便恢复
-
-// 点击“Skip Today”按钮后，推迟所有今天及以后的日程
-function skipToday() {
-  if (allSchedules.length === 0) {
-    alert("暂无日程数据可操作");
-    return;
-  }
-
-  // 备份当前日程数据，用于恢复
-  previousSchedules = JSON.parse(JSON.stringify(allSchedules));
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);  // 确保不包含时间部分，只有日期
-
-  // 遍历所有日程，修改日期
-  allSchedules.forEach(item => {
-    const itemDate = new Date(item.date);
-
-    // 如果日程的日期是今天或更晚
-    if (itemDate >= today) {
-      // 将日期推迟一天
-      itemDate.setDate(itemDate.getDate() + 1);
-      item.date = itemDate.toISOString().split('T')[0];
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'review_schedule.ics';
+      link.click();
     }
-  });
 
-  saveData(); // 保存数据到本地
-  renderSchedule(); // 更新日程表
-  alert("所有今天及以后日程已推迟一天！");
-}
+    // Skip Today 功能
+    let previousSchedules = []; // 用于存储上次操作前的日程数据，方便恢复
 
-// 如果需要恢复，点击撤销按钮
-function undoSkipToday() {
-  if (previousSchedules.length === 0) {
-    alert("没有可撤销的操作");
-    return;
-  }
+    // 点击“Skip Today”按钮后，推迟所有今天及以后的日程
+    function skipToday() {
+      if (allSchedules.length === 0) {
+        alert("暂无日程数据可操作");
+        return;
+      }
 
-  // 恢复日程数据
-  allSchedules = previousSchedules;
-  saveData(); // 保存数据到本地
-  renderSchedule(); // 更新日程表
-  alert("操作已撤销，日程恢复到原状态");
-}
+      // 备份当前日程数据，用于恢复
+      previousSchedules = JSON.parse(JSON.stringify(allSchedules));
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);  // 确保不包含时间部分，只有日期
+
+      // 遍历所有日程，修改日期
+      allSchedules.forEach(item => {
+        const itemDate = new Date(item.date);
+
+        // 如果日程的日期是今天或更晚
+        if (itemDate >= today) {
+          // 将日期推迟一天
+          itemDate.setDate(itemDate.getDate() + 1);
+          item.date = itemDate.toISOString().split('T')[0];
+        }
+      });
+
+      saveData(); // 保存数据到本地
+      renderSchedule(); // 更新日程表
+      alert("所有今天及以后日程已推迟一天！");
+    }
+
+    // 如果需要恢复，点击撤销按钮
+    function undoSkipToday() {
+      if (previousSchedules.length === 0) {
+        alert("没有可撤销的操作");
+        return;
+      }
+
+      // 恢复日程数据
+      allSchedules = previousSchedules;
+      saveData(); // 保存数据到本地
+      renderSchedule(); // 更新日程表
+      alert("操作已撤销，日程恢复到原状态");
+    }
 
     window.onload = () => {
       updateCountdown();
@@ -462,4 +492,5 @@ function undoSkipToday() {
     setInterval(updateCountdown, 1000);
   </script>
 </body>
+
 </html>
