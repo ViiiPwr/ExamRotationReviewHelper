@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>艾宾浩斯记忆曲线复习助手</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      margin: 0;
+    }
+    .section {
+      background: white;
+      border-radius: 8px;
+      margin: 20px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    label {
+      margin-right: 10px;
+      font-size: 16px;
+    }
+    input, button {
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    input[type="text"], input[type="date"], input[type="month"] {
+      width: 200px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+    tr:hover {
+      background-color: #f2f2f2;
+    }
+    .completed {
+      background-color: #d0f0c0;
+      text-decoration: line-through;
+    }
+    .completed input[type="checkbox"] {
+      background-color: #d0f0c0;
+    }
+    #countdown, #todayInfo {
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    #stats {
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin: 10px 0;
+    }
+    .card h2 {
+      margin-top: 0;
+    }
+    /* 进度条外框 */
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background-color: #e0e0e0; /* 灰色背景 */
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    /* 进度条的实际填充部分 */
+    .progress {
+      height: 100%;
+      background: linear-gradient(90deg, #4caf50, #8bc34a); /* 绿色渐变 */
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>艾宾浩斯记忆曲线复习助手</h1>
+  </header>
+
+  <div class="section card">
+    <h2>考研倒计时</h2>
+    <div id="countdown"></div>
+  </div>
+
+  <div class="section card">
+    <h2>今天的日期</h2>
+    <div id="todayInfo"></div>
+  </div>
+
+  <div class="section card">
+    <h2>添加日程</h2>
+    <label>名称：<input type="text" id="eventName"></label>
+    <label>开始时间：<input type="date" id="startDate"></label>
+    <button onclick="addSchedule()">添加</button>
+  </div>
+
+  <div class="section card" id="stats">
+    <!-- Progress Stats will be rendered here -->
+  </div>
+
+  <div class="section card">
+    <h2>查看日程表</h2>
+    <label>选择月份：
+      <input type="month" id="viewMonth" onchange="renderSchedule()">
+    </label>
+    <div id="calendar"></div>
+  </div>
+
+  <div class="section card">
+    <h2>数据管理</h2>
+    <button onclick="downloadData()">导出数据 (JSON)</button>
+    <label>
+      导入数据：<input type="file" onchange="uploadData(event)">
+    </label>
+  </div>
+
+  <script>
+    const reviewOffsets = [0, 1, 3, 6, 14, 29, 44];
+    let allSchedules = JSON.parse(localStorage.getItem('schedules') || '[]');
+
+    function saveData() {
+      localStorage.setItem('schedules', JSON.stringify(allSchedules));
+    }
+
+    setInterval(() => {
+      downloadData();
+    }, 86400000);
+
+    function addSchedule() {
+      const name = document.getElementById("eventName").value.trim();
+      const startDateStr = document.getElementById("startDate").value;
+      if (!name || !startDateStr) {
+        alert("请填写名称和开始时间");
+        return;
+      }
+
+      const startDate = new Date(startDateStr);
+      reviewOffsets.forEach((offset, index) => {
+        const reviewDate = new Date(startDate);
+        reviewDate.setDate(reviewDate.getDate() + offset);
+        allSchedules.push({
+          name,
+          round: index + 1,
+          date: reviewDate.toISOString().split('T')[0],
+          completed: false
+        });
+      });
+
+      saveData();
+      alert("已添加日程并生成复习计划！");
+      renderSchedule();
+    }
+
+    function toggleComplete(index) {
+      allSchedules[index].completed = !allSchedules[index].completed;
+      saveData();
+      renderSchedule();
+    }
+
+    function renderSchedule() {
+      const viewMonth = document.getElementById("viewMonth").value;
+      if (!viewMonth) return;
+
+      const [year, month] = viewMonth.split("-");
+      const lastDay = new Date(year, month, 0).getDate();
+
+      let calendar = {};
+      allSchedules.forEach((item, idx) => {
+        if (item.date.startsWith(viewMonth)) {
+          if (!calendar[item.date]) calendar[item.date] = [];
+          calendar[item.date].push({ ...item, index: idx });
+        }
+      });
+
+      let html = `<table><tr><th>日期</th><th>复习内容</th></tr>`;
+      for (let day = 1; day <= lastDay; day++) {
+        const dateStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
+        const items = calendar[dateStr] || [];
+        const content = items.map(item =>
+          `<div class="${item.completed ? 'completed' : ''}">
+             <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
+             ${item.name}（第${item.round}次）
+           </div>`).join("");
+        html += `<tr><td>${dateStr}</td><td>${content}</td></tr>`;
+      }
+      html += `</table>`;
+      document.getElementById("calendar").innerHTML = html;
+
+      const totalTasks = allSchedules.length;
+      const completedTasks = allSchedules.filter(item => item.completed).length;
+      const uncompletedTasks = totalTasks - completedTasks;
+
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      const todayTasks = allSchedules.filter(item => item.date === todayStr && !item.completed).length;
+
+      const completionRate = totalTasks ? ((completedTasks / totalTasks) * 100).toFixed(2) : 0;
+
+      const progressBarWidth = 300; // 进度条的宽度
+      const progressWidth = Math.round((completedTasks / totalTasks) * progressBarWidth);
+
+      const statsHtml = `
+        <p>总任务数：${totalTasks}</p>
+        <p>已完成：${completedTasks} | 未完成：${uncompletedTasks}</p>
+        <p>完成率：${completionRate}%</p>
+        <div class="progress-bar">
+          <div class="progress" style="width: ${progressWidth}px;"></div>
+        </div>
+        <p>第一遍 过讲义 挖空 1<br>
+          第二遍 做题  2<br>
+          第三遍 讲义 4<br>
+          第四遍 思维导图课7<br>
+          第五遍 做题 整理自己的anki 15<br>
+          第六遍 导图课 30<br>
+          第七遍 导图or讲义 + 做题 排除最近五年的题目 45</p>
+      `;
+      document.getElementById("stats").innerHTML = statsHtml;
+    }
+
+    function downloadData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allSchedules, null, 2));
+      const link = document.createElement('a');
+      link.setAttribute("href", dataStr);
+      link.setAttribute("download", "review_schedule.json");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function uploadData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          if (Array.isArray(importedData)) {
+            allSchedules = importedData;
+            saveData();
+            alert("数据导入成功！");
+            renderSchedule();
+          } else {
+            alert("导入的数据格式不正确！");
+          }
+        } catch (err) {
+          alert("读取文件时出错：" + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function updateCountdown() {
+      const examDate = new Date('2025-12-20T00:00:00+08:00');
+      const now = new Date();
+      const timeDifference = examDate - now;
+
+      const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+
+      document.getElementById("countdown").innerHTML = `
+        <strong>考研倒计时：</strong> ${days}天 ${hours}小时 ${minutes}分钟 ${seconds}秒
+      `;
+    }
+
+    function updateTodayInfo() {
+      const today = new Date();
+      const daysOfWeek = ['星期天', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      const todayStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+      const weekDay = daysOfWeek[today.getDay()];
+      document.getElementById("todayInfo").innerHTML = `今天是：${todayStr} ${weekDay}`;
+    }
+
+    window.onload = () => {
+      updateCountdown();
+      updateTodayInfo();
+      const today = new Date();
+      const monthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+      document.getElementById("viewMonth").value = monthStr;
+      renderSchedule();
+    };
+
+    setInterval(updateCountdown, 1000);
+  </script>
+</body>
+</html>
