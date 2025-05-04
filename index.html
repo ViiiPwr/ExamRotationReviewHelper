@@ -199,7 +199,7 @@
 
     input[type="checkbox"] {
       appearance: none;
-      width: 14px;
+      min-width: 14px;
       height: 14px;
       border: 1.5px solid #4CAF50;
       border-radius: 50%;
@@ -223,6 +223,13 @@
       font-size: 10px;
       color: white;
       line-height: 1;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      /* 控制 checkbox 和文字的间距 */
     }
   </style>
 </head>
@@ -371,7 +378,7 @@
             const items = calendar[dateStr] || [];
             const content = items.map(item => {
               const titleStyle = item.round === 1 ? 'style="color: #4CAF50;"' : '';
-              return `<div class="${item.completed ? 'completed' : 'drop-target'} draggable" draggable="true"
+              return `<div class="${item.completed ? 'completed' : 'drop-target'} draggable task-item" draggable="true"
                 ondragstart="handleDragStart(event, ${item.index})">
                 <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
                 <span ${titleStyle}>${item.name}-R${item.round}</span>
