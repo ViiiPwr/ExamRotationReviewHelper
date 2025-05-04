@@ -174,6 +174,15 @@
       outline: none;
       /* 去掉焦点时的轮廓 */
     }
+
+    .no-task-row {
+      background-image: repeating-linear-gradient(45deg,
+          #f0f0f0,
+          #f0f0f0 5px,
+          #ffffff 5px,
+          #ffffff 10px);
+      opacity: 0.8;
+    }
   </style>
 </head>
 
@@ -338,12 +347,12 @@
           </div>`;
             }).join("");
 
-            // 如果当天没有复习内容，将背景置灰
-            const rowStyle = content ? '' : 'background-color: #d3d3d3;';
+            // // 如果当天没有复习内容，将背景置灰
+            // const rowStyle = content ? '' : 'background-color: #d3d3d3;';
             // 如果是今天的日期，添加高亮样式
-            const rowClass = dateStr === todayStr ? 'highlight' : '';
+            const rowClass = content ? (dateStr === todayStr ? 'highlight' : '') : 'no-task-row';
 
-            html += `<td class="${rowClass}" style="${rowStyle}"><div style="font-weight: bold">${dayCounter}</div><br>${content}</td>`;
+            html += `<td class="${rowClass}""><div style="font-weight: bold">${dayCounter}</div><br>${content}</td>`;
             dayCounter++;
           } else {
             html += `<td></td>`;  // 填充空白单元格
