@@ -483,6 +483,18 @@ END:VEVENT
     window.onload = () => {
       updateCountdown();
       updateTodayInfo();
+
+      // 设置默认的开始日期为第一轮最后一个复习日程的第二天
+      const firstRoundSchedules = allSchedules.filter(item => item.round === 1);
+      if (firstRoundSchedules.length > 0) {
+        const lastFirstRoundSchedule = firstRoundSchedules[firstRoundSchedules.length - 1];
+        const lastDate = new Date(lastFirstRoundSchedule.date); // 获取最后一个第一轮的日期
+        lastDate.setDate(lastDate.getDate() + 1); // 设置为第二天
+
+        // 填充开始日期
+        document.getElementById("startDate").value = lastDate.toISOString().split('T')[0];
+      }
+
       const today = new Date();
       const monthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
       document.getElementById("viewMonth").value = monthStr;
