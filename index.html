@@ -203,12 +203,6 @@
   </div>
 
   <div class="section card">
-    <h2>删除指定日程</h2>
-    <label>请输入日程名称：<input type="text" id="deleteEventName"></label>
-    <button onclick="deleteSchedulesByName()">删除所有该名称的日程</button>
-  </div>
-
-  <div class="section card">
     <h2>查看日程表</h2>
     <label>选择月份：
       <input type="month" id="viewMonth" onchange="renderSchedule()">
@@ -222,13 +216,16 @@
 
   <div class="section card">
     <h2>数据管理</h2>
+    <h3>删除指定日程与清空</h3>
+    <label>请输入日程名称：<input type="text" id="deleteEventName"></label>
+    <button onclick="deleteSchedulesByName()">删除所有该名称的日程</button> <br>
+    <button id="clear-all-schedules" class="warning-button">清空所有日程</button>
+    <h3>备份导出</h3>
     <button onclick="downloadData()">导出数据 (JSON)</button>
     <label>
       导入数据：<input type="file" onchange="uploadData(event)">
     </label> <br>
     <button onclick="exportToICS()">导出所有日程为日历文件 (.ics)</button>
-    <br>
-    <button id="clear-all-schedules" class="warning-button">清空所有日程</button>
   </div>
 
   <script>
