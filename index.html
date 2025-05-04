@@ -224,15 +224,6 @@
       color: white;
       line-height: 1;
     }
-
-    .task-title {
-      white-space: nowrap;
-      /* 避免换行 */
-      overflow: hidden;
-      /* 超出文字不显示 */
-      text-overflow: ellipsis;
-      /* 超出部分使用省略号显示 */
-    }
   </style>
 </head>
 
@@ -383,7 +374,7 @@
               return `<div class="${item.completed ? 'completed' : 'drop-target'} draggable" draggable="true"
                 ondragstart="handleDragStart(event, ${item.index})">
                 <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
-                <span class="task-title" ${titleStyle}>${item.name}-R${item.round}</span>
+                <span ${titleStyle}>${item.name}-R${item.round}</span>
               </div>`;
             }).join("");
             const rowClass = content ? (dateStr === todayStr ? 'highlight' : '') : 'no-task-row';
