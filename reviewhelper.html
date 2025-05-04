@@ -120,7 +120,6 @@
   <header>
     <h1>艾宾浩斯记忆曲线复习助手</h1>
   </header>
-  <button onclick="exportToICS()">导出所有日程为日历文件 (.ics)</button>
 
   <div class="section card">
     <h2>考研倒计时</h2>
@@ -158,7 +157,8 @@
     <button onclick="downloadData()">导出数据 (JSON)</button>
     <label>
       导入数据：<input type="file" onchange="uploadData(event)">
-    </label>
+    </label> <br>
+  <button onclick="exportToICS()">导出所有日程为日历文件 (.ics)</button>
   </div>
 
   <script>
