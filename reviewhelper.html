@@ -488,8 +488,8 @@ END:VEVENT
       allSchedules.forEach(item => {
         const itemDate = new Date(item.date);
 
-        // 如果日程的日期是今天或更晚
-        if (itemDate >= today) {
+        // 如果日程的日期是今天或更晚，且任务未完成
+        if (itemDate >= today && !item.completed) {
           // 将日期推迟一天
           itemDate.setDate(itemDate.getDate() + 1);
           item.date = itemDate.toISOString().split('T')[0];
