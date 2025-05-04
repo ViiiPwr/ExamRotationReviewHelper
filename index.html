@@ -142,6 +142,36 @@
       /* 黄色背景色 */
       font-weight: bold;
     }
+
+    /* 警示按钮样式 */
+    .warning-button {
+      background-color: #f44336;
+      /* 红色 */
+      color: white;
+      /* 白色文字 */
+      border: none;
+      /* 去掉边框 */
+      padding: 10px 20px;
+      /* 内边距 */
+      font-size: 16px;
+      /* 字体大小 */
+      cursor: pointer;
+      /* 鼠标悬停时显示为可点击 */
+      border-radius: 5px;
+      /* 圆角 */
+      transition: background-color 0.3s;
+      /* 平滑过渡 */
+    }
+
+    .warning-button:hover {
+      background-color: #d32f2f;
+      /* 鼠标悬停时的颜色 */
+    }
+
+    .warning-button:focus {
+      outline: none;
+      /* 去掉焦点时的轮廓 */
+    }
   </style>
 </head>
 
@@ -189,6 +219,8 @@
       导入数据：<input type="file" onchange="uploadData(event)">
     </label> <br>
     <button onclick="exportToICS()">导出所有日程为日历文件 (.ics)</button>
+    <br>
+    <button id="clear-all-schedules" class="warning-button">清空所有日程</button>
   </div>
 
   <script>
@@ -514,6 +546,22 @@ END:VEVENT
       renderSchedule(); // 更新日程表
       alert("操作已撤销，日程恢复到原状态");
     }
+
+    // 清空所有日程的功能
+    document.getElementById("clear-all-schedules").addEventListener("click", function () {
+      const confirmClear = confirm("你确定要清空所有日程吗？此操作无法撤销！");
+
+      if (confirmClear) {
+        // 清空 allSchedules 数组
+        allSchedules = [];
+        // 保存数据
+        saveData();
+        // 更新界面
+        renderSchedule();
+        // 提示用户操作已完成
+        alert("所有日程已清空！");
+      }
+    });
 
     window.onload = () => {
       updateCountdown();
