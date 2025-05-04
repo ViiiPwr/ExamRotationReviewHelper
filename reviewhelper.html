@@ -224,11 +224,14 @@
   for (let day = 1; day <= lastDay; day++) {
     const dateStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
     const items = calendar[dateStr] || [];
-    const content = items.map(item =>
-      `<div class="${item.completed ? 'completed' : ''}">
-         <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
-         ${item.name}（第${item.round}次）
-       </div>`).join("");
+    const content = items.map(item => {
+  // 判断是否为第一次复习
+  const titleStyle = item.round === 1 ? 'style="color: #4CAF50;"' : '';
+  return `<div class="${item.completed ? 'completed' : ''}">
+            <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
+            <span ${titleStyle}>${item.name}（第${item.round}次）</span>
+          </div>`;
+}).join("");
     
     // 如果是今天的日期，添加高亮样式
     const rowClass = dateStr === todayStr ? 'highlight' : '';
