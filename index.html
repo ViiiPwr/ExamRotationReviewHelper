@@ -569,15 +569,19 @@ END:VEVENT
         return;
       }
 
-      // Filter out all schedules with the given name
+      // Filter out all schedules with the given name and check if the schedule is not completed
       const initialScheduleCount = allSchedules.length;
-      allSchedules = allSchedules.filter(schedule => schedule.name !== nameToDelete);
+      allSchedules = allSchedules.filter(schedule =>
+        schedule.name !== nameToDelete || schedule.completed === true // Keep completed ones
+      );
 
-      if (allSchedules.length === initialScheduleCount) {
-        alert("未找到匹配的日程名称");
+      const deletedSchedules = initialScheduleCount - allSchedules.length;
+
+      if (deletedSchedules === 0) {
+        alert("未找到匹配的日程名称，或者所有匹配的日程已完成");
       } else {
         saveData();
-        alert(`已删除所有名称为 "${nameToDelete}" 的日程`);
+        alert(`已删除所有未完成的名称为 "${nameToDelete}" 的日程`);
         renderSchedule();
       }
     }
