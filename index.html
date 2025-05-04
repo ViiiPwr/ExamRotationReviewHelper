@@ -327,10 +327,14 @@
       </div>`;
         }).join("");
 
+        // 判断是否有复习内容，如果没有则设置背景为灰色
+        const rowStyle = content ? '' : 'background-color: #d3d3d3;';
+
+
         // 如果是今天的日期，添加高亮样式
         const rowClass = dateStr === todayStr ? 'highlight' : '';
 
-        html += `<tr class="${rowClass}"><td>${dateStr}</td><td>${content}</td></tr>`;
+        html += `<tr class="${rowClass}" style="${rowStyle}"><td>${dateStr}</td><td>${content}</td></tr>`;
       }
       html += `</table>`;
       document.getElementById("calendar").innerHTML = html;
