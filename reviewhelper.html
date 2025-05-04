@@ -212,14 +212,37 @@
       }
 
       const startDate = new Date(startDateStr);
+      let scheduleQueue = [];
+
+      // 遍历复习偏移量，按顺序分配复习日期
       reviewOffsets.forEach((offset, index) => {
         const reviewDate = new Date(startDate);
         reviewDate.setDate(reviewDate.getDate() + offset);
-        allSchedules.push({
+        scheduleQueue.push({
           name,
           round: index + 1,
           date: reviewDate.toISOString().split('T')[0],
           completed: false
+        });
+      });
+
+      // 按照日期排序，将任务安排到日期中
+      scheduleQueue.forEach(schedule => {
+        let currentDate = new Date(schedule.date);
+        let targetDate = currentDate.toISOString().split('T')[0];
+
+        // 如果当前日期的任务数已满，则推迟到下一个日期
+        while (allSchedules.filter(item => item.date === targetDate).length >= 4) {
+          currentDate.setDate(currentDate.getDate() + 1);
+          targetDate = currentDate.toISOString().split('T')[0];
+        }
+
+        // 最终安排到可用日期
+        allSchedules.push({
+          name: schedule.name,
+          round: schedule.round,
+          date: targetDate,
+          completed: schedule.completed
         });
       });
 
