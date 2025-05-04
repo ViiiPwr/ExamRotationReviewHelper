@@ -120,6 +120,7 @@
   <header>
     <h1>艾宾浩斯记忆曲线复习助手</h1>
   </header>
+  <button onclick="exportToICS()">导出所有日程为日历文件 (.ics)</button>
 
   <div class="section card">
     <h2>考研倒计时</h2>
@@ -321,6 +322,61 @@
       const weekDay = daysOfWeek[today.getDay()];
       document.getElementById("todayInfo").innerHTML = `今天是：${todayStr} ${weekDay}`;
     }
+    function exportToICS() {
+  if (allSchedules.length === 0) {
+    alert("暂无日程数据可导出");
+    return;
+  }
+
+  let icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Ebbinghaus Review Helper//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+`;
+
+  // 用来记录已添加的事件UID
+  let existingUIDs = new Set();
+
+  allSchedules.forEach(item => {
+    const dateStr = item.date.replace(/-/g, '');
+    // 使用全天事件的格式
+    const start = `${dateStr}`;
+    const end = `${dateStr}`;
+    const uid = `${start}-${item.name}`; // 生成唯一的UID
+
+    // 如果UID已存在，跳过当前事件
+    if (existingUIDs.has(uid)) {
+      return;
+    }
+
+    existingUIDs.add(uid);  // 添加UID到已添加集合中
+
+    icsContent += `BEGIN:VEVENT
+SUMMARY:${item.name}（第${item.round}次复习）
+DTSTART;TZID=Asia/Shanghai;VALUE=DATE:${start}
+DTEND;TZID=Asia/Shanghai;VALUE=DATE:${end}
+DESCRIPTION:艾宾浩斯记忆曲线复习助手提醒
+STATUS:CONFIRMED
+SEQUENCE:0
+UID:${uid}  // 为每个事件设置唯一的UID
+BEGIN:VALARM
+TRIGGER:-PT10M
+ACTION:DISPLAY
+DESCRIPTION:提醒你复习【${item.name}】
+END:VALARM
+END:VEVENT
+`;
+  });
+
+  icsContent += `END:VCALENDAR`;
+
+  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'review_schedule.ics';
+  link.click();
+}
 
     window.onload = () => {
       updateCountdown();
