@@ -245,6 +245,24 @@
       const completedTasks = allSchedules.filter(item => item.completed).length;
       const uncompletedTasks = totalTasks - completedTasks;
 
+// 获取最晚的一次复习日程
+const latestSchedule = allSchedules.reduce((latest, item) => {
+  const itemDate = new Date(item.date);
+  return itemDate > latest ? itemDate : latest;
+}, new Date(0));  // 初始化为1970年1月1日
+
+// 获取最早的一次复习日程
+const earliestSchedule = allSchedules.reduce((earliest, item) => {
+  const itemDate = new Date(item.date);
+  return itemDate < earliest ? itemDate : earliest;
+}, new Date());  // 初始化为当前日期
+
+// 格式化最晚和最早的日期
+const latestScheduleDate = latestSchedule.toISOString().split('T')[0];
+const earliestScheduleDate = earliestSchedule.toISOString().split('T')[0];
+
+// 计算完成所有复习所需的时间
+const timeDifference = Math.floor((latestSchedule - earliestSchedule) / (1000 * 60 * 60 * 24));  // 时间差（天数）
       const todayTasks = allSchedules.filter(item => item.date === todayStr && !item.completed).length;
 
       const completionRate = totalTasks ? ((completedTasks / totalTasks) * 100).toFixed(2) : 0;
@@ -255,6 +273,8 @@
       const statsHtml = `
         <p>总任务数：${totalTasks}</p>
         <p>已完成：${completedTasks} | 未完成：${uncompletedTasks}</p>
+         <p style="color:#4CAF50;">最晚复习日程：${latestScheduleDate}</p>
+         <p style="color:#4CAF50;">完成所有复习所需时间：${timeDifference} 天</p>
         <p>完成率：${completionRate}%</p>
         <div class="progress-bar">
           <div class="progress" style="width: ${progressWidth}px;"></div>
