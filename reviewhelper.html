@@ -317,7 +317,18 @@
       const earliestScheduleDate = earliestSchedule.toISOString().split('T')[0];
 
       // 计算完成所有复习所需的时间
-      const timeDifference = Math.floor((latestSchedule - earliestSchedule) / (1000 * 60 * 60 * 24));  // 时间差（天数）
+      const timeDifference = Math.floor((latestSchedule - earliestSchedule) / (1000 * 60 * 60 * 24));
+
+      // 获取最晚的第五轮日程
+      const fifthRoundSchedules = allSchedules.filter(item => item.round === 5);
+      const lastFifthRound = fifthRoundSchedules.reduce((latest, item) => {
+        const itemDate = new Date(item.date);
+        return itemDate > latest ? itemDate : latest;
+      }, new Date(0));
+
+      const fifthRoundTimeDifference = Math.floor((lastFifthRound - earliestSchedule) / (1000 * 60 * 60 * 24));
+
+
       const todayTasks = allSchedules.filter(item => item.date === todayStr && !item.completed).length;
 
       const completionRate = totalTasks ? ((completedTasks / totalTasks) * 100).toFixed(2) : 0;
@@ -330,6 +341,7 @@
         <p>已完成：${completedTasks} | 未完成：${uncompletedTasks}</p>
          <p style="color:#4CAF50;">最晚复习日程：${latestScheduleDate}</p>
          <p style="color:#4CAF50;">完成所有复习所需时间：${timeDifference} 天</p>
+         <p style="color:#4CAF50;">完成第五轮复习所需时间：${fifthRoundTimeDifference} 天</p>
         <p>完成率：${completionRate}%</p>
         <div class="progress-bar">
           <div class="progress" style="width: ${progressWidth}px;"></div>
