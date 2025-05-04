@@ -71,10 +71,12 @@
 
     th,
     td {
-      padding: 12px;
-      text-align: center;
+      padding: 6px;
+      text-align: left;
+      vertical-align: top;
       border: 1px solid #ddd;
       border-radius: 6px;
+      font-size: 11px;
     }
 
     th {
@@ -206,18 +208,16 @@
     <button onclick="deleteSchedulesByName()">删除所有该名称的日程</button>
   </div>
 
-
-
-  <div class="section card" id="stats">
-    <!-- Progress Stats will be rendered here -->
-  </div>
-
   <div class="section card">
     <h2>查看日程表</h2>
     <label>选择月份：
       <input type="month" id="viewMonth" onchange="renderSchedule()">
     </label>
     <div id="calendar"></div>
+  </div>
+
+  <div class="section card" id="stats">
+    <!-- Progress Stats will be rendered here -->
   </div>
 
   <div class="section card">
@@ -301,7 +301,9 @@
       if (!viewMonth) return;
 
       const [year, month] = viewMonth.split("-");
-      const lastDay = new Date(year, month, 0).getDate();
+      const firstDay = new Date(year, month - 1, 1);  // 获取该月第一天
+      const lastDay = new Date(year, month, 0).getDate();  // 获取该月最后一天
+      const firstDayWeekday = firstDay.getDay();  // 获取该月第一天是星期几
 
       let calendar = {};
       allSchedules.forEach((item, idx) => {
@@ -314,31 +316,53 @@
       const today = new Date();
       const todayStr = today.toISOString().split('T')[0];  // 获取当前日期（yyyy-mm-dd）
 
-      let html = `<table><tr><th>日期</th><th>复习内容</th></tr>`;
-      for (let day = 1; day <= lastDay; day++) {
-        const dateStr = `${year}-${month}-${String(day).padStart(2, '0')}`;
-        const items = calendar[dateStr] || [];
-        const content = items.map(item => {
-          // 判断是否为第一次复习
-          const titleStyle = item.round === 1 ? 'style="color: #4CAF50;"' : '';
-          return `<div class="${item.completed ? 'completed' : ''}">
-        <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
-        <span ${titleStyle}>${item.name}（第${item.round}次）</span>
-      </div>`;
-        }).join("");
+      let html = `<table class="calendar-table"><thead><tr>`;
+      // 表头：星期
+      ["日", "一", "二", "三", "四", "五", "六"].forEach(day => {
+        html += `<th>${day}</th>`;
+      });
+      html += `</tr></thead><tbody>`;
 
-        // 判断是否有复习内容，如果没有则设置背景为灰色
-        const rowStyle = content ? '' : 'background-color: #d3d3d3;';
+      let dayCounter = 1;
+      for (let row = 0; row < 5; row++) {  // 最多 5 行
+        html += `<tr>`;
+        for (let col = 0; col < 7; col++) {
+          if (row === 0 && col < firstDayWeekday) {
+            html += `<td></td>`;  // 填充空白单元格
+          } else if (dayCounter <= lastDay) {
+            const dateStr = `${year}-${month}-${String(dayCounter).padStart(2, '0')}`;
+            const items = calendar[dateStr] || [];
+            const content = items.map(item => {
+              // 判断是否为第一次复习
+              const titleStyle = item.round === 1 ? 'style="color: #4CAF50;"' : '';
+              return `<div class="${item.completed ? 'completed' : ''}">
+            <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
+            <span ${titleStyle}>${item.name}-R${item.round}</span>
+          </div>`;
+            }).join("");
 
+            // 如果当天没有复习内容，将背景置灰
+            const rowStyle = content ? '' : 'background-color: #d3d3d3;';
+            // 如果是今天的日期，添加高亮样式
+            const rowClass = dateStr === todayStr ? 'highlight' : '';
 
-        // 如果是今天的日期，添加高亮样式
-        const rowClass = dateStr === todayStr ? 'highlight' : '';
-
-        html += `<tr class="${rowClass}" style="${rowStyle}"><td>${dateStr}</td><td>${content}</td></tr>`;
+            html += `<td class="${rowClass}" style="${rowStyle}"><div style="font-weight: bold">${dayCounter}</div><br>${content}</td>`;
+            dayCounter++;
+          } else {
+            html += `<td></td>`;  // 填充空白单元格
+          }
+        }
+        html += `</tr>`;
       }
-      html += `</table>`;
+      html += `</tbody></table>`;
+
       document.getElementById("calendar").innerHTML = html;
 
+      // 统计信息
+      updateStats();
+    }
+
+    function updateStats() {
       const totalTasks = allSchedules.length;
       const completedTasks = allSchedules.filter(item => item.completed).length;
       const uncompletedTasks = totalTasks - completedTasks;
@@ -351,26 +375,21 @@
         return;
       }
 
-      // 获取最晚的一次复习日程
       const latestSchedule = allSchedules.reduce((latest, item) => {
         const itemDate = new Date(item.date);
         return itemDate > latest ? itemDate : latest;
-      }, new Date(0));  // 初始化为1970年1月1日
+      }, new Date(0));
 
-      // 获取最早的一次复习日程
       const earliestSchedule = allSchedules.reduce((earliest, item) => {
         const itemDate = new Date(item.date);
         return itemDate < earliest ? itemDate : earliest;
-      }, new Date());  // 初始化为当前日期
+      }, new Date());
 
-      // 格式化最晚和最早的日期
       const latestScheduleDate = latestSchedule.toISOString().split('T')[0];
       const earliestScheduleDate = earliestSchedule.toISOString().split('T')[0];
 
-      // 计算完成所有复习所需的时间
       const timeDifference = Math.floor((latestSchedule - earliestSchedule) / (1000 * 60 * 60 * 24));
 
-      // 获取最晚的第五轮日程
       const fifthRoundSchedules = allSchedules.filter(item => item.round === 5);
       const lastFifthRound = fifthRoundSchedules.reduce((latest, item) => {
         const itemDate = new Date(item.date);
@@ -379,11 +398,12 @@
 
       const fifthRoundTimeDifference = Math.floor((lastFifthRound - earliestSchedule) / (1000 * 60 * 60 * 24));
 
+      const todayStr = new Date().toISOString().split('T')[0];
       const todayTasks = allSchedules.filter(item => item.date === todayStr && !item.completed).length;
 
       const completionRate = totalTasks ? ((completedTasks / totalTasks) * 100).toFixed(2) : 0;
 
-      const progressBarWidth = 300; // 进度条的宽度
+      const progressBarWidth = 300;
       const progressWidth = Math.round((completedTasks / totalTasks) * progressBarWidth);
 
       const statsHtml = `
@@ -396,13 +416,14 @@
     <div class="progress-bar">
       <div class="progress" style="width: ${progressWidth}px;"></div>
     </div>
-    <p>第一遍 过讲义 挖空 1<br>
-      第二遍 做题  2<br>
-      第三遍 讲义 4<br>
-      第四遍 思维导图课7<br>
-      第五遍 做题 整理自己的anki 15<br>
-      第六遍 导图课 30<br>
-      第七遍 导图or讲义 + 做题 排除最近五年的题目 45</p>
+    <p>复习思路参考:</p>
+    <p>第一遍R1 过讲义 挖空 1<br>
+      第二遍R2 做题 2<br>
+      第三遍R3 讲义 4<br>
+      第四遍R4 思维导图课7<br>
+      第五遍R5 做题 整理自己的anki 15<br>
+      第六遍R6 导图课 30<br>
+      第七遍R7 导图or讲义 + 做题 排除最近五年的题目 45</p>
   `;
       document.getElementById("stats").innerHTML = statsHtml;
     }
