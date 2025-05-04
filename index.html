@@ -183,6 +183,19 @@
           #ffffff 10px);
       opacity: 0.8;
     }
+
+    .draggable {
+      cursor: move;
+    }
+
+    .drop-target {
+      border: 1px dashed transparent;
+      transition: border-color 0.2s ease;
+    }
+
+    .drop-target:hover {
+      border-color: #45a049;
+    }
   </style>
 </head>
 
@@ -260,7 +273,6 @@
       const startDate = new Date(startDateStr);
       let scheduleQueue = [];
 
-      // 遍历复习偏移量，按顺序分配复习日期
       reviewOffsets.forEach((offset, index) => {
         const reviewDate = new Date(startDate);
         reviewDate.setDate(reviewDate.getDate() + offset);
@@ -272,18 +284,15 @@
         });
       });
 
-      // 按照日期排序，将任务安排到日期中
       scheduleQueue.forEach(schedule => {
         let currentDate = new Date(schedule.date);
         let targetDate = currentDate.toISOString().split('T')[0];
 
-        // 如果当前日期的任务数已满，则推迟到下一个日期
         while (allSchedules.filter(item => item.date === targetDate).length >= 4) {
           currentDate.setDate(currentDate.getDate() + 1);
           targetDate = currentDate.toISOString().split('T')[0];
         }
 
-        // 最终安排到可用日期
         allSchedules.push({
           name: schedule.name,
           round: schedule.round,
@@ -297,19 +306,14 @@
       renderSchedule();
     }
 
-    function toggleComplete(index) {
-      allSchedules[index].completed = !allSchedules[index].completed;
-      saveData();
-      renderSchedule();
-    }
     function renderSchedule() {
       const viewMonth = document.getElementById("viewMonth").value;
       if (!viewMonth) return;
 
       const [year, month] = viewMonth.split("-");
-      const firstDay = new Date(year, month - 1, 1);  // 获取该月第一天
-      const lastDay = new Date(year, month, 0).getDate();  // 获取该月最后一天
-      const firstDayWeekday = firstDay.getDay();  // 获取该月第一天是星期几
+      const firstDay = new Date(year, month - 1, 1);
+      const lastDay = new Date(year, month, 0).getDate();
+      const firstDayWeekday = firstDay.getDay();
 
       let calendar = {};
       allSchedules.forEach((item, idx) => {
@@ -320,42 +324,38 @@
       });
 
       const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];  // 获取当前日期（yyyy-mm-dd）
+      const todayStr = today.toISOString().split('T')[0];
 
       let html = `<table class="calendar-table"><thead><tr>`;
-      // 表头：星期
       ["日", "一", "二", "三", "四", "五", "六"].forEach(day => {
         html += `<th>${day}</th>`;
       });
       html += `</tr></thead><tbody>`;
 
       let dayCounter = 1;
-      for (let row = 0; row < 5; row++) {  // 最多 5 行
+      for (let row = 0; row < 5; row++) {
         html += `<tr>`;
         for (let col = 0; col < 7; col++) {
           if (row === 0 && col < firstDayWeekday) {
-            html += `<td></td>`;  // 填充空白单元格
+            html += `<td></td>`;
           } else if (dayCounter <= lastDay) {
             const dateStr = `${year}-${month}-${String(dayCounter).padStart(2, '0')}`;
             const items = calendar[dateStr] || [];
             const content = items.map(item => {
-              // 判断是否为第一次复习
               const titleStyle = item.round === 1 ? 'style="color: #4CAF50;"' : '';
-              return `<div class="${item.completed ? 'completed' : ''}">
-            <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
-            <span ${titleStyle}>${item.name}-R${item.round}</span>
-          </div>`;
+              return `<div class="${item.completed ? 'completed' : 'drop-target'} draggable" draggable="true"
+                ondragstart="handleDragStart(event, ${item.index})">
+                <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
+                <span ${titleStyle}>${item.name}-R${item.round}</span>
+              </div>`;
             }).join("");
-
-            // // 如果当天没有复习内容，将背景置灰
-            // const rowStyle = content ? '' : 'background-color: #d3d3d3;';
-            // 如果是今天的日期，添加高亮样式
             const rowClass = content ? (dateStr === todayStr ? 'highlight' : '') : 'no-task-row';
 
-            html += `<td class="${rowClass}""><div style="font-weight: bold">${dayCounter}</div><br>${content}</td>`;
+            html += `<td class="${rowClass}" ondrop="handleDrop(event, '${dateStr}')" ondragover="allowDrop(event)">
+              <div style="font-weight: bold">${dayCounter}</div><br>${content}</td>`;
             dayCounter++;
           } else {
-            html += `<td></td>`;  // 填充空白单元格
+            html += `<td></td>`;
           }
         }
         html += `</tr>`;
@@ -363,9 +363,33 @@
       html += `</tbody></table>`;
 
       document.getElementById("calendar").innerHTML = html;
-
-      // 统计信息
       updateStats();
+    }
+
+    function handleDragStart(event, index) {
+      event.dataTransfer.setData("text", index); // Store the index of the dragged item
+    }
+
+    function allowDrop(event) {
+      event.preventDefault(); // Allow drop
+    }
+
+    function handleDrop(event, targetDate) {
+      event.preventDefault();
+      const draggedIndex = event.dataTransfer.getData("text");
+      const draggedSchedule = allSchedules[draggedIndex];
+      const newDate = new Date(targetDate);
+
+      draggedSchedule.date = newDate.toISOString().split('T')[0]; // Update the date of the dragged schedule
+
+      saveData(); // Save updated data to local storage
+      renderSchedule(); // Re-render the schedule with updated dates
+    }
+
+    function toggleComplete(index) {
+      allSchedules[index].completed = !allSchedules[index].completed;
+      saveData();
+      renderSchedule();
     }
 
     function updateStats() {
