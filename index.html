@@ -288,7 +288,6 @@
       saveData();
       renderSchedule();
     }
-
     function renderSchedule() {
       const viewMonth = document.getElementById("viewMonth").value;
       if (!viewMonth) return;
@@ -315,9 +314,9 @@
           // 判断是否为第一次复习
           const titleStyle = item.round === 1 ? 'style="color: #4CAF50;"' : '';
           return `<div class="${item.completed ? 'completed' : ''}">
-            <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
-            <span ${titleStyle}>${item.name}（第${item.round}次）</span>
-          </div>`;
+        <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
+        <span ${titleStyle}>${item.name}（第${item.round}次）</span>
+      </div>`;
         }).join("");
 
         // 如果是今天的日期，添加高亮样式
@@ -331,6 +330,14 @@
       const totalTasks = allSchedules.length;
       const completedTasks = allSchedules.filter(item => item.completed).length;
       const uncompletedTasks = totalTasks - completedTasks;
+
+      // Prevent calculating the latest and earliest schedules if there are no tasks
+      if (totalTasks === 0) {
+        document.getElementById("stats").innerHTML = `
+      <p>没有复习计划。</p>
+    `;
+        return;
+      }
 
       // 获取最晚的一次复习日程
       const latestSchedule = allSchedules.reduce((latest, item) => {
@@ -360,7 +367,6 @@
 
       const fifthRoundTimeDifference = Math.floor((lastFifthRound - earliestSchedule) / (1000 * 60 * 60 * 24));
 
-
       const todayTasks = allSchedules.filter(item => item.date === todayStr && !item.completed).length;
 
       const completionRate = totalTasks ? ((completedTasks / totalTasks) * 100).toFixed(2) : 0;
@@ -369,23 +375,23 @@
       const progressWidth = Math.round((completedTasks / totalTasks) * progressBarWidth);
 
       const statsHtml = `
-        <p>总任务数：${totalTasks}</p>
-        <p>已完成：${completedTasks} | 未完成：${uncompletedTasks}</p>
-         <p style="color:#4CAF50;">最晚复习日程：${latestScheduleDate}</p>
-         <p style="color:#4CAF50;">完成所有复习所需时间：${timeDifference} 天</p>
-         <p style="color:#4CAF50;">完成第五轮复习所需时间：${fifthRoundTimeDifference} 天</p>
-        <p>完成率：${completionRate}%</p>
-        <div class="progress-bar">
-          <div class="progress" style="width: ${progressWidth}px;"></div>
-        </div>
-        <p>第一遍 过讲义 挖空 1<br>
-          第二遍 做题  2<br>
-          第三遍 讲义 4<br>
-          第四遍 思维导图课7<br>
-          第五遍 做题 整理自己的anki 15<br>
-          第六遍 导图课 30<br>
-          第七遍 导图or讲义 + 做题 排除最近五年的题目 45</p>
-      `;
+    <p>总任务数：${totalTasks}</p>
+    <p>已完成：${completedTasks} | 未完成：${uncompletedTasks}</p>
+    <p style="color:#4CAF50;">最晚复习日程：${latestScheduleDate}</p>
+    <p style="color:#4CAF50;">完成所有复习所需时间：${timeDifference} 天</p>
+    <p style="color:#4CAF50;">完成第五轮复习所需时间：${fifthRoundTimeDifference} 天</p>
+    <p>完成率：${completionRate}%</p>
+    <div class="progress-bar">
+      <div class="progress" style="width: ${progressWidth}px;"></div>
+    </div>
+    <p>第一遍 过讲义 挖空 1<br>
+      第二遍 做题  2<br>
+      第三遍 讲义 4<br>
+      第四遍 思维导图课7<br>
+      第五遍 做题 整理自己的anki 15<br>
+      第六遍 导图课 30<br>
+      第七遍 导图or讲义 + 做题 排除最近五年的题目 45</p>
+  `;
       document.getElementById("stats").innerHTML = statsHtml;
     }
 
