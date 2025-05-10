@@ -266,3 +266,18 @@ select:focus {
     border-left: 4px solid #ff9800;
 }
 /* 保持低优先级无背景色 */
+#toast {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  z-index: 9999;
+  min-width: 120px;
+  max-width: 300px;
+  padding: 12px 24px;
+  background: #4CAF50;
+  color: #fff;
+  border-radius: 8px;
+  display: none;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}

@@ -7,6 +7,35 @@ function saveData() {
     localStorage.setItem('schedules', JSON.stringify(allSchedules));
     localStorage.setItem('pooledTasks', JSON.stringify(pooledTasks));
     localStorage.setItem('poolCapacity', poolCapacity);
+    autoSyncToGist();
+}
+
+function autoSyncToGist() {
+    const { token, gistId } = loadGistConfig();
+    if (!token || !gistId) return;
+    const exportData = {
+        schedules: allSchedules,
+        pooledTasks: pooledTasks,
+        poolCapacity: poolCapacity
+    };
+    fetch(`https://api.github.com/gists/${gistId}`, {
+        method: 'PATCH',
+        headers: {
+            'Authorization': 'token ' + token,
+            'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({
+            files: {
+                "review_schedule.json": {
+                    content: JSON.stringify(exportData, null, 2)
+                }
+            }
+        })
+    }).then(res => {
+        if (res.ok) {
+            showToast('同步到云端成功！');
+        }
+    });
 }
 
 setInterval(() => {
@@ -73,7 +102,7 @@ function addSchedule() {
     });
 
     saveData();
-    alert("已添加日程并生成复习计划！");
+    showToast("已添加日程并生成复习计划！");
     renderSchedule();
 }
 
@@ -174,7 +203,7 @@ function handleDrop(event, targetDate) {
 function handlePoolDrop(event) {
     event.preventDefault();
     if (pooledTasks.length >= poolCapacity) {
-        alert('任务池已达容量上限，无法继续添加任务！');
+        showToast('任务池已达容量上限，无法继续添加任务！');
         return;
     }
     const draggedIndex = event.dataTransfer.getData("text");
@@ -306,7 +335,7 @@ function downloadData() {
 
 function luckyDraw() {
     if (pooledTasks.length === 0) {
-        alert("任务池中没有可抽取的任务！");
+        showToast("任务池中没有可抽取的任务！");
         return;
     }
 
@@ -316,7 +345,7 @@ function luckyDraw() {
     // 检查今天的任务数量
     const todayTasks = allSchedules.filter(task => task.date === todayStr).length;
     if (todayTasks >= 4) {
-        alert("今天的任务已经达到上限（4个），请选择其他日期！");
+        showToast("今天的任务已经达到上限（4个），请选择其他日期！");
         return;
     }
 
@@ -336,7 +365,7 @@ function luckyDraw() {
     saveData();
     renderSchedule();
     renderTaskPool();
-    alert(`已将任务 "${luckyTask.name}-R${luckyTask.round}" 添加到今天的日程中！`);
+    showToast(`已将任务 "${luckyTask.name}-R${luckyTask.round}" 添加到今天的日程中！`);
 }
 
 function uploadData(event) {
@@ -360,7 +389,7 @@ function uploadData(event) {
                     }));
                 }
                 saveData();
-                alert("数据导入成功！");
+                showToast("数据导入成功！");
                 renderSchedule();
             } else if (Array.isArray(importedData)) {
                 // 兼容更早的旧版本格式
@@ -369,7 +398,7 @@ function uploadData(event) {
                     priority: item.priority || "low"
                 }));
                 saveData();
-                alert("数据导入成功！（旧版本格式）");
+                showToast("数据导入成功！（旧版本格式）");
                 renderSchedule();
             } else {
                 alert("导入的数据格式不正确！");
@@ -493,7 +522,7 @@ function undoSkipToday() {
     allSchedules = previousSchedules;
     saveData();
     renderSchedule();
-    alert("操作已撤销，日程恢复到原状态");
+    showToast("操作已撤销，日程恢复到原状态");
 }
 
 function deleteSchedulesByName() {
@@ -515,7 +544,7 @@ function deleteSchedulesByName() {
         alert("未找到匹配的日程名称，或者所有匹配的日程已完成");
     } else {
         saveData();
-        alert(`已删除所有未完成的名称为 "${nameToDelete}" 的日程`);
+        showToast(`已删除所有未完成的名称为 "${nameToDelete}" 的日程`);
         renderSchedule();
     }
 }
@@ -528,11 +557,11 @@ document.getElementById('clear-all-schedules').addEventListener('click', functio
         pooledTasks = []; // 同时清空任务池
         saveData();
         renderSchedule();
-        alert('所有日程已清空！');
+        showToast('所有日程已清空！');
     }
 });
 
-window.onload = () => {
+window.onload = async () => {
     updateCountdown();
     updateTodayInfo();
 
@@ -544,6 +573,9 @@ window.onload = () => {
 
     setInterval(updateCountdown, 1000);
     setInterval(updateTodayInfo, 1000);
+
+    // 先尝试从云端同步数据
+    await syncFromGist();
 
     renderSchedule();
 };
@@ -557,4 +589,116 @@ function setPoolCapacity() {
     poolCapacity = val;
     saveData();
     renderTaskPool();
+}
+
+// 同步到 GitHub Gist
+async function syncToGist() {
+    const token = document.getElementById('gistToken').value.trim();
+    const gistId = document.getElementById('gistId').value.trim();
+    if (!token || !gistId) {
+        alert('请填写 GitHub Token 和 Gist ID');
+        return;
+    }
+    const exportData = {
+        schedules: allSchedules,
+        pooledTasks: pooledTasks,
+        poolCapacity: poolCapacity
+    };
+    try {
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': 'token ' + token,
+                'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify({
+                files: {
+                    "review_schedule.json": {
+                        content: JSON.stringify(exportData, null, 2)
+                    }
+                }
+            })
+        });
+        if (res.ok) {
+            showToast('同步到云端成功！');
+        } else {
+            alert('同步失败，请检查 Token 和 Gist ID 是否正确');
+        }
+    } catch (err) {
+        alert('同步出错：' + err.message);
+    }
+}
+
+// 从 GitHub Gist 同步
+async function syncFromGist() {
+    const { token, gistId } = loadGistConfig();
+    if (!token || !gistId) return;
+    try {
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+            headers: {
+                'Authorization': 'token ' + token,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+        const data = await res.json();
+        if (data.files && data.files["review_schedule.json"]) {
+            const importedData = JSON.parse(data.files["review_schedule.json"].content);
+
+            // 深度比较
+            const localData = {
+                schedules: allSchedules,
+                pooledTasks: pooledTasks,
+                poolCapacity: poolCapacity
+            };
+            const isSame = JSON.stringify(importedData) === JSON.stringify(localData);
+
+            if (!isSame) {
+                allSchedules = importedData.schedules || [];
+                pooledTasks = importedData.pooledTasks || [];
+                poolCapacity = importedData.poolCapacity || 10;
+                saveData();
+                renderSchedule();
+                showToast('从云端同步成功！');
+            }
+            // 如果完全一样，不做任何操作
+        }
+    } catch (err) {
+        // 可选：错误处理
+    }
+}
+
+function saveGistConfig() {
+    const token = document.getElementById('gistToken').value.trim();
+    const gistId = document.getElementById('gistId').value.trim();
+    if (!token || !gistId) {
+        alert('请填写 GitHub Token 和 Gist ID');
+        return;
+    }
+    localStorage.setItem('gistToken', token);
+    localStorage.setItem('gistId', gistId);
+    showToast('云端配置已保存，下次自动填充！');
+}
+
+function loadGistConfig() {
+    const token = localStorage.getItem('gistToken') || '';
+    const gistId = localStorage.getItem('gistId') || '';
+    document.getElementById('gistToken').value = token;
+    document.getElementById('gistId').value = gistId;
+    return { token, gistId };
+}
+
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+    setTimeout(() => {
+        toast.style.transition = 'opacity 0.5s';
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            toast.style.display = 'none';
+            toast.style.transition = '';
+        }, 500);
+    }, 3000);
 }

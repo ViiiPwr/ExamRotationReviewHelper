@@ -85,9 +85,15 @@
       导入数据：<input type="file" onchange="uploadData(event)">
     </label> <br>
     <button onclick="exportToICS()">导出所有日程为日历文件 (.ics)</button>
+    <button onclick="syncToGist()">同步到云端（GitHub Gist）</button>
+    <button onclick="syncFromGist()">从云端同步</button>
+    <input type="text" id="gistToken" placeholder="GitHub Token" style="width:220px;">
+    <input type="text" id="gistId" placeholder="Gist ID" style="width:220px;">
+    <button onclick="saveGistConfig()">保存云端配置</button>
   </div>
 
   <script src="script.js"></script>
+  <div id="toast"></div>
 </body>
 
 </html>
