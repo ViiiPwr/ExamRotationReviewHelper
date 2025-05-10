@@ -256,7 +256,11 @@ function updateStats() {
 }
 
 function downloadData() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allSchedules, null, 2));
+    const exportData = {
+        schedules: allSchedules,
+        pooledTasks: pooledTasks
+    };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
     const link = document.createElement('a');
     link.setAttribute("href", dataStr);
     link.setAttribute("download", "review_schedule.json");
@@ -273,10 +277,19 @@ function uploadData(event) {
     reader.onload = function (e) {
         try {
             const importedData = JSON.parse(e.target.result);
-            if (Array.isArray(importedData)) {
-                allSchedules = importedData;
+            if (importedData.schedules && Array.isArray(importedData.schedules)) {
+                allSchedules = importedData.schedules;
+                if (importedData.pooledTasks && Array.isArray(importedData.pooledTasks)) {
+                    pooledTasks = importedData.pooledTasks;
+                }
                 saveData();
                 alert("数据导入成功！");
+                renderSchedule();
+            } else if (Array.isArray(importedData)) {
+                // 兼容旧版本的导入格式
+                allSchedules = importedData;
+                saveData();
+                alert("数据导入成功！（旧版本格式）");
                 renderSchedule();
             } else {
                 alert("导入的数据格式不正确！");
@@ -427,14 +440,15 @@ function deleteSchedulesByName() {
     }
 }
 
-document.getElementById("clear-all-schedules").addEventListener("click", function () {
+document.getElementById('clear-all-schedules').addEventListener('click', function() {
     const confirmClear = confirm("你确定要清空所有日程吗？此操作无法撤销！");
 
     if (confirmClear) {
         allSchedules = [];
+        pooledTasks = []; // 同时清空任务池
         saveData();
         renderSchedule();
-        alert("所有日程已清空！");
+        alert('所有日程已清空！');
     }
 });
 
