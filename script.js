@@ -286,6 +286,41 @@ function downloadData() {
     document.body.removeChild(link);
 }
 
+function luckyDraw() {
+    if (pooledTasks.length === 0) {
+        alert("任务池中没有可抽取的任务！");
+        return;
+    }
+
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    // 检查今天的任务数量
+    const todayTasks = allSchedules.filter(task => task.date === todayStr).length;
+    if (todayTasks >= 4) {
+        alert("今天的任务已经达到上限（4个），请选择其他日期！");
+        return;
+    }
+
+    // 随机选择一个任务
+    const randomIndex = Math.floor(Math.random() * pooledTasks.length);
+    const luckyTask = pooledTasks[randomIndex];
+    
+    // 从任务池中移除该任务
+    pooledTasks.splice(randomIndex, 1);
+    
+    // 添加到今天的日程中
+    allSchedules.push({
+        ...luckyTask,
+        date: todayStr
+    });
+
+    saveData();
+    renderSchedule();
+    renderTaskPool();
+    alert(`已将任务 "${luckyTask.name}-R${luckyTask.round}" 添加到今天的日程中！`);
+}
+
 function uploadData(event) {
     const file = event.target.files[0];
     if (!file) return;
