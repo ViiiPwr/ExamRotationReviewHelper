@@ -1,10 +1,12 @@
 const reviewOffsets = [0, 1, 3, 6, 14, 29, 44];
 let allSchedules = JSON.parse(localStorage.getItem('schedules') || '[]');
 let pooledTasks = JSON.parse(localStorage.getItem('pooledTasks') || '[]');
+let poolCapacity = parseInt(localStorage.getItem('poolCapacity') || '10', 10); // 默认10
 
 function saveData() {
     localStorage.setItem('schedules', JSON.stringify(allSchedules));
     localStorage.setItem('pooledTasks', JSON.stringify(pooledTasks));
+    localStorage.setItem('poolCapacity', poolCapacity);
 }
 
 setInterval(() => {
@@ -171,13 +173,18 @@ function handleDrop(event, targetDate) {
 
 function handlePoolDrop(event) {
     event.preventDefault();
+    if (pooledTasks.length >= poolCapacity) {
+        alert('任务池已达容量上限，无法继续添加任务！');
+        return;
+    }
     const draggedIndex = event.dataTransfer.getData("text");
     const draggedSchedule = allSchedules[draggedIndex];
 
     pooledTasks.push({
         name: draggedSchedule.name,
         round: draggedSchedule.round,
-        completed: draggedSchedule.completed
+        completed: draggedSchedule.completed,
+        priority: draggedSchedule.priority // 保证优先级不丢失
     });
 
     allSchedules.splice(draggedIndex, 1);
@@ -203,6 +210,10 @@ function renderTaskPool() {
     }).join('');
 
     document.getElementById("taskPool").innerHTML = poolHtml || '<p>暂无待处理的任务</p>';
+    // 显示容量信息
+    const info = `(${pooledTasks.length} / ${poolCapacity})`;
+    document.getElementById('poolCapacityInfo').textContent = info;
+    document.getElementById('poolCapacity').value = poolCapacity;
 }
 
 function toggleComplete(index) {
@@ -536,3 +547,14 @@ window.onload = () => {
 
     renderSchedule();
 };
+
+function setPoolCapacity() {
+    const val = parseInt(document.getElementById('poolCapacity').value, 10);
+    if (isNaN(val) || val <= 0) {
+        alert('请输入大于0的数字作为容量！');
+        return;
+    }
+    poolCapacity = val;
+    saveData();
+    renderTaskPool();
+}
