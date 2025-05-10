@@ -11,9 +11,14 @@ setInterval(() => {
     downloadData();
 }, 86400000);
 
+const normalReviewOffsets = [0, 1, 3, 6, 14, 29, 44];
+const quickReviewOffsets = [0, 3, 6, 14, 29];
+
 function addSchedule() {
     const name = document.getElementById("eventName").value.trim();
     const startDateStr = document.getElementById("startDate").value;
+    const reviewMode = document.getElementById("reviewMode").value;
+    
     if (!name || !startDateStr) {
         alert("请填写名称和开始时间");
         return;
@@ -21,8 +26,20 @@ function addSchedule() {
 
     const startDate = new Date(startDateStr);
     let scheduleQueue = [];
+    
+    let selectedOffsets;
+    switch(reviewMode) {
+        case 'quick':
+            selectedOffsets = quickReviewOffsets;
+            break;
+        case 'single':
+            selectedOffsets = [0];
+            break;
+        default:
+            selectedOffsets = normalReviewOffsets;
+    }
 
-    reviewOffsets.forEach((offset, index) => {
+    selectedOffsets.forEach((offset, index) => {
         const reviewDate = new Date(startDate);
         reviewDate.setDate(reviewDate.getDate() + offset);
         scheduleQueue.push({

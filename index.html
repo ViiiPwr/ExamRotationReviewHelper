@@ -29,8 +29,15 @@
     <h2>添加日程</h2>
     <label>名称：<input type="text" id="eventName"></label>
     <label>开始时间：<input type="date" id="startDate"></label>
+    <label>复习模式：
+        <select id="reviewMode">
+            <option value="normal">正常复习间隔</option>
+            <option value="quick">快速复习间隔</option>
+            <option value="single">单次复习任务</option>
+        </select>
+    </label>
     <button onclick="addSchedule()">添加</button>
-  </div>
+</div>
 
   <div class="section card">
     <h2>查看日程表</h2>
