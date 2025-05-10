@@ -184,6 +184,10 @@ input[type="checkbox"] {
     vertical-align: middle;
     cursor: pointer;
     padding: 0;
+    /* 新增以下两行让内容居中 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 input[type="checkbox"]:checked {
