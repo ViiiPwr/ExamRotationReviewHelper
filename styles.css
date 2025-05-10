@@ -171,19 +171,19 @@ tr:hover {
 
 input[type="checkbox"] {
     appearance: none;
-    min-width: 14px;
+    -webkit-appearance: none;
+    width: 14px;
     height: 14px;
     border: 1.5px solid #4CAF50;
     border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 8px;
-    color: white;
+    display: inline-block;
+    box-sizing: border-box;
     background-color: transparent;
     vertical-align: middle;
     cursor: pointer;
     padding: 0;
+    margin: 0 4px 0 0;
+    transition: border-color 0.2s, background 0.2s;
 }
 
 input[type="checkbox"]:checked {
