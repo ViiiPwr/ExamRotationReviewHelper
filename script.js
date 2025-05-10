@@ -1,8 +1,10 @@
 const reviewOffsets = [0, 1, 3, 6, 14, 29, 44];
 let allSchedules = JSON.parse(localStorage.getItem('schedules') || '[]');
+let pooledTasks = JSON.parse(localStorage.getItem('pooledTasks') || '[]');
 
 function saveData() {
     localStorage.setItem('schedules', JSON.stringify(allSchedules));
+    localStorage.setItem('pooledTasks', JSON.stringify(pooledTasks));
 }
 
 setInterval(() => {
@@ -111,6 +113,7 @@ function renderSchedule() {
 
     document.getElementById("calendar").innerHTML = html;
     updateStats();
+    renderTaskPool(); // 添加这一行
 }
 
 function handleDragStart(event, index) {
@@ -124,13 +127,58 @@ function allowDrop(event) {
 function handleDrop(event, targetDate) {
     event.preventDefault();
     const draggedIndex = event.dataTransfer.getData("text");
-    const draggedSchedule = allSchedules[draggedIndex];
-    const newDate = new Date(targetDate);
+    const source = event.dataTransfer.getData("source") || "schedule";
 
-    draggedSchedule.date = newDate.toISOString().split('T')[0];
+    if (source === "schedule") {
+        const draggedSchedule = allSchedules[draggedIndex];
+        const newDate = new Date(targetDate);
+        draggedSchedule.date = newDate.toISOString().split('T')[0];
+    } else if (source === "pool") {
+        const draggedTask = pooledTasks[draggedIndex];
+        pooledTasks.splice(draggedIndex, 1);
+        allSchedules.push({
+            ...draggedTask,
+            date: targetDate
+        });
+    }
 
     saveData();
     renderSchedule();
+    renderTaskPool();
+}
+
+function handlePoolDrop(event) {
+    event.preventDefault();
+    const draggedIndex = event.dataTransfer.getData("text");
+    const draggedSchedule = allSchedules[draggedIndex];
+
+    pooledTasks.push({
+        name: draggedSchedule.name,
+        round: draggedSchedule.round,
+        completed: draggedSchedule.completed
+    });
+
+    allSchedules.splice(draggedIndex, 1);
+
+    saveData();
+    renderSchedule();
+    renderTaskPool();
+}
+
+function handleDragStart(event, index, source = "schedule") {
+    event.dataTransfer.setData("text", index);
+    event.dataTransfer.setData("source", source);
+}
+
+function renderTaskPool() {
+    const poolHtml = pooledTasks.map((task, index) => `
+        <div class="task-item" draggable="true" 
+             ondragstart="handleDragStart(event, ${index}, 'pool')">
+            <span>${task.name}-R${task.round}</span>
+        </div>
+    `).join('');
+
+    document.getElementById("taskPool").innerHTML = poolHtml || '<p>暂无待处理的任务</p>';
 }
 
 function toggleComplete(index) {
