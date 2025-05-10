@@ -18,6 +18,7 @@ function addSchedule() {
     const name = document.getElementById("eventName").value.trim();
     const startDateStr = document.getElementById("startDate").value;
     const reviewMode = document.getElementById("reviewMode").value;
+    const priority = document.getElementById("priority") ? document.getElementById("priority").value : "low";
     
     if (!name || !startDateStr) {
         alert("请填写名称和开始时间");
@@ -46,7 +47,8 @@ function addSchedule() {
             name,
             round: index + 1,
             date: reviewDate.toISOString().split('T')[0],
-            completed: false
+            completed: false,
+            priority // 新增优先级
         });
     });
 
@@ -63,7 +65,8 @@ function addSchedule() {
             name: schedule.name,
             round: schedule.round,
             date: targetDate,
-            completed: schedule.completed
+            completed: schedule.completed,
+            priority: schedule.priority // 新增优先级
         });
     });
 
@@ -109,10 +112,12 @@ function renderSchedule() {
                 const items = calendar[dateStr] || [];
                 const content = items.map(item => {
                     const titleStyle = item.round === 1 ? 'style="color: #4CAF50;"' : '';
-                    return `<div class="${item.completed ? 'completed' : 'drop-target'} draggable task-item" draggable="true"
+                    const priorityClass = item.priority === "high" ? "priority-high" : (item.priority === "medium" ? "priority-medium" : "");
+                    const priorityIcon = item.priority === "high" ? "🔥" : (item.priority === "medium" ? "⭐" : "");
+                    return `<div class="${item.completed ? 'completed' : 'drop-target'} draggable task-item ${priorityClass}" draggable="true"
                 ondragstart="handleDragStart(event, ${item.index})">
                 <input type="checkbox" onchange="toggleComplete(${item.index})" ${item.completed ? 'checked' : ''}>
-                <span ${titleStyle}>${item.name}-R${item.round}</span>
+                <span ${titleStyle}>${priorityIcon}${item.name}-R${item.round}</span>
               </div>`;
                 }).join("");
                 const rowClass = content ? (dateStr === todayStr ? 'highlight' : '') : 'no-task-row';
@@ -188,12 +193,14 @@ function handleDragStart(event, index, source = "schedule") {
 }
 
 function renderTaskPool() {
-    const poolHtml = pooledTasks.map((task, index) => `
-        <div class="task-item" draggable="true" 
+    const poolHtml = pooledTasks.map((task, index) => {
+        const priorityClass = task.priority === "high" ? "priority-high" : (task.priority === "medium" ? "priority-medium" : "");
+        const priorityIcon = task.priority === "high" ? "🔥" : (task.priority === "medium" ? "⭐" : "");
+        return `<div class="task-item ${priorityClass}" draggable="true" 
              ondragstart="handleDragStart(event, ${index}, 'pool')">
-            <span>${task.name}-R${task.round}</span>
-        </div>
-    `).join('');
+            <span>${priorityIcon}${task.name}-R${task.round}</span>
+        </div>`;
+    }).join('');
 
     document.getElementById("taskPool").innerHTML = poolHtml || '<p>暂无待处理的任务</p>';
 }
@@ -330,16 +337,26 @@ function uploadData(event) {
         try {
             const importedData = JSON.parse(e.target.result);
             if (importedData.schedules && Array.isArray(importedData.schedules)) {
-                allSchedules = importedData.schedules;
+                // 兼容旧数据：为没有 priority 字段的任务赋默认值
+                allSchedules = importedData.schedules.map(item => ({
+                    ...item,
+                    priority: item.priority || "low"
+                }));
                 if (importedData.pooledTasks && Array.isArray(importedData.pooledTasks)) {
-                    pooledTasks = importedData.pooledTasks;
+                    pooledTasks = importedData.pooledTasks.map(item => ({
+                        ...item,
+                        priority: item.priority || "low"
+                    }));
                 }
                 saveData();
                 alert("数据导入成功！");
                 renderSchedule();
             } else if (Array.isArray(importedData)) {
-                // 兼容旧版本的导入格式
-                allSchedules = importedData;
+                // 兼容更早的旧版本格式
+                allSchedules = importedData.map(item => ({
+                    ...item,
+                    priority: item.priority || "low"
+                }));
                 saveData();
                 alert("数据导入成功！（旧版本格式）");
                 renderSchedule();

@@ -252,3 +252,14 @@ select:focus {
 .lucky-draw-btn:hover {
     background-color: #45a049;
 }
+
+/* 优先级样式 */
+.priority-high {
+    background-color: #ffcccc !important;
+    border-left: 4px solid #f44336;
+}
+.priority-medium {
+    background-color: #fff3cd !important;
+    border-left: 4px solid #ff9800;
+}
+/* 保持低优先级无背景色 */
