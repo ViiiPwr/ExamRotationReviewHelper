@@ -344,11 +344,6 @@ function luckyDraw() {
     
     // 检查今天的任务数量
     const todayTasks = allSchedules.filter(task => task.date === todayStr).length;
-    if (todayTasks >= 4) {
-        showToast("今天的任务已经达到上限（4个），请选择其他日期！");
-        return;
-    }
-
     // 随机选择一个任务
     const randomIndex = Math.floor(Math.random() * pooledTasks.length);
     const luckyTask = pooledTasks[randomIndex];
