@@ -544,6 +544,64 @@ function deleteSchedulesByName() {
     }
 }
 
+// 新增：按名称和可选轮次删除单次日程
+function deleteScheduleByNameAndOptionalRound() {
+    const nameToDelete = document.getElementById("deleteEventName").value.trim();
+    const roundStr = document.getElementById("deleteEventRound").value.trim();
+    const roundToDelete = roundStr ? parseInt(roundStr, 10) : null;
+
+    if (!nameToDelete) {
+        alert("请填写日程名称");
+        return;
+    }
+
+    if (roundToDelete !== null && !isNaN(roundToDelete)) {
+        // 删除单次（名称+轮次）
+        const index = allSchedules.findIndex(schedule =>
+            schedule.name === nameToDelete &&
+            schedule.completed === false &&
+            schedule.round === roundToDelete
+        );
+        const poolIndex = pooledTasks.findIndex(task =>
+            task.name === nameToDelete &&
+            task.round === roundToDelete
+        );
+        if (index === -1 && poolIndex === -1) {
+            alert("未找到匹配的日程，或者该日程已完成");
+        } else {
+            if (index !== -1) {
+                allSchedules.splice(index, 1);
+            }
+            if (poolIndex !== -1) {
+                pooledTasks.splice(poolIndex, 1);
+            }
+            saveData();
+            showToast(`已删除名称为 "${nameToDelete}"，第${roundToDelete}轮的一个未完成日程（含任务池）`);
+            renderSchedule();
+            renderTaskPool();
+        }
+    } else {
+        // 删除所有该名称的未完成日程
+        const beforeLength = allSchedules.length;
+        const beforePoolLength = pooledTasks.length;
+        allSchedules = allSchedules.filter(schedule =>
+            !(schedule.name === nameToDelete && schedule.completed === false)
+        );
+        pooledTasks = pooledTasks.filter(task =>
+            task.name !== nameToDelete
+        );
+        const deletedCount = (beforeLength - allSchedules.length) + (beforePoolLength - pooledTasks.length);
+        if (deletedCount === 0) {
+            alert("未找到匹配的未完成日程");
+        } else {
+            saveData();
+            showToast(`已删除名称为 "${nameToDelete}" 的${deletedCount}个未完成日程（含任务池）`);
+            renderSchedule();
+            renderTaskPool();
+        }
+    }
+}
+
 document.getElementById('clear-all-schedules').addEventListener('click', function() {
     const confirmClear = confirm("你确定要清空所有日程吗？此操作无法撤销！");
 
