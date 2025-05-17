@@ -87,7 +87,7 @@ function addSchedule() {
         let currentDate = new Date(schedule.date);
         let targetDate = currentDate.toISOString().split('T')[0];
 
-        while (allSchedules.filter(item => item.date === targetDate).length >= 4) {
+        while (allSchedules.filter(item => item.date === targetDate).length >= 5) {
             currentDate.setDate(currentDate.getDate() + 1);
             targetDate = currentDate.toISOString().split('T')[0];
         }
