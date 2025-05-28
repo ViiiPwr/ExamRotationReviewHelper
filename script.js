@@ -86,18 +86,20 @@ function addSchedule() {
     scheduleQueue.forEach(schedule => {
         let currentDate = new Date(schedule.date);
         let targetDate = currentDate.toISOString().split('T')[0];
-
-        while (allSchedules.filter(item => item.date === targetDate).length >= 5) {
+        let tryCount = 0;
+        // 新增：最多只允许连续两天跳过，第三天必须插入
+        while (allSchedules.filter(item => item.date === targetDate).length >= 5 && tryCount < 2) {
             currentDate.setDate(currentDate.getDate() + 1);
             targetDate = currentDate.toISOString().split('T')[0];
+            tryCount++;
         }
-
+        // 第三天（tryCount==2）无论是否已满都插入
         allSchedules.push({
             name: schedule.name,
             round: schedule.round,
             date: targetDate,
             completed: schedule.completed,
-            priority: schedule.priority // 新增优先级
+            priority: schedule.priority
         });
     });
 
