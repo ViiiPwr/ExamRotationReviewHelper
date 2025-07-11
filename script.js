@@ -44,6 +44,7 @@ setInterval(() => {
 
 const normalReviewOffsets = [0, 1, 3, 6, 14, 29, 44];
 const quickReviewOffsets = [0, 3, 6, 14, 29];
+const ultraShortReviewOffsets = [0, 2, 6]; // 第1、3、7天
 
 function addSchedule() {
     const name = document.getElementById("eventName").value.trim();
@@ -61,6 +62,9 @@ function addSchedule() {
     
     let selectedOffsets;
     switch(reviewMode) {
+        case 'ultra-short':
+            selectedOffsets = ultraShortReviewOffsets;
+            break;
         case 'quick':
             selectedOffsets = quickReviewOffsets;
             break;
@@ -86,14 +90,10 @@ function addSchedule() {
     scheduleQueue.forEach(schedule => {
         let currentDate = new Date(schedule.date);
         let targetDate = currentDate.toISOString().split('T')[0];
-        let tryCount = 0;
-        // 新增：最多只允许连续两天跳过，第三天必须插入
-        while (allSchedules.filter(item => item.date === targetDate).length >= 5 && tryCount < 2) {
+        while (allSchedules.filter(item => item.date === targetDate).length >= 5) {
             currentDate.setDate(currentDate.getDate() + 1);
             targetDate = currentDate.toISOString().split('T')[0];
-            tryCount++;
         }
-        // 第三天（tryCount==2）无论是否已满都插入
         allSchedules.push({
             name: schedule.name,
             round: schedule.round,
